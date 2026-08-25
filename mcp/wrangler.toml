@@ -12,6 +12,10 @@ rules = [
 [triggers]
 crons = ["*/5 * * * *"]
 
+[[kv_namespaces]]
+binding = "OAUTH_KV"
+id = "46b52984cdf347b5a16441e7945d34bd"
+
 [env.production]
 name = "honcho-mcp"
 
