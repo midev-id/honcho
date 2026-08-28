@@ -110,7 +110,14 @@ def verify_jwt(token: str) -> JWTParams:
         if not settings.AUTH.JWT_SECRET:
             raise ValueError("AUTH_JWT_SECRET is not set, cannot verify JWT.")
         decoded = jwt.decode(
-            token, settings.AUTH.JWT_SECRET.encode("utf-8"), algorithms=["HS256"]
+            token,
+            settings.AUTH.JWT_SECRET.encode("utf-8"),
+            algorithms=["HS256"],
+            # Honcho's `exp` claim is a custom ISO-8601 string (checked manually
+            # below), not the standard numeric Unix-timestamp claim PyJWT expects
+            # -- letting PyJWT auto-validate it raises a decode error on every
+            # token that has an expiry.
+            options={"verify_exp": False},
         )
         if "t" in decoded:
             params.t = decoded["t"]
