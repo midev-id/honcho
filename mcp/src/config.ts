@@ -10,6 +10,35 @@ export interface HonchoConfig {
 export interface Env {
   HONCHO_API_URL?: string;
   ALERT_WEBHOOK_URL?: string;
+  /**
+   * Shared secret every MCP client must present as its bearer token.
+   *
+   * Set this whenever the upstream Honcho has `AUTH_USE_AUTH=false` (e.g. a
+   * self-hosted instance left open on a private network): this Worker is then
+   * the ONLY thing standing between the public internet and an unauthenticated
+   * Honcho, and without it any non-empty bearer would be accepted.
+   *
+   * When unset, the bearer is forwarded to Honcho unverified and Honcho's own
+   * auth is what rejects bad tokens -- the original behaviour, kept so hosted
+   * deployments that rely on per-user Honcho keys are unaffected.
+   */
+  MCP_SHARED_SECRET?: string;
+}
+
+/**
+ * Constant-time string equality. A plain `===` leaks how many leading
+ * characters matched via its early exit, which is enough to recover a secret
+ * one character at a time.
+ */
+function secretsMatch(a: string, b: string): boolean {
+  const ab = new TextEncoder().encode(a);
+  const bb = new TextEncoder().encode(b);
+  // Length is not secret (it is visible in the request), but the comparison
+  // below needs equal lengths to be meaningful, so reject early.
+  if (ab.length !== bb.length) return false;
+  let diff = 0;
+  for (let i = 0; i < ab.length; i++) diff |= ab[i] ^ bb[i];
+  return diff === 0;
 }
 
 /**
@@ -36,6 +65,13 @@ export function parseConfig(request: Request, env: Env = {}): HonchoConfig {
   const apiKey = bearerMatch[1].trim();
   if (!apiKey) {
     throw new Error("Authorization header is empty after 'Bearer '.");
+  }
+
+  // When a shared secret is configured this Worker is the trust boundary, so
+  // the bearer is checked here rather than being handed to Honcho to judge.
+  const expected = env.MCP_SHARED_SECRET?.trim();
+  if (expected && !secretsMatch(apiKey, expected)) {
+    throw new Error("Invalid bearer token.");
   }
 
   const workspaceId =

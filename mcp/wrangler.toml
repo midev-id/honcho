@@ -1,3 +1,10 @@
+# MCP_SHARED_SECRET is a secret, not a var -- never put its value here.
+#   deployed:  wrangler secret put MCP_SHARED_SECRET
+#   local dev: put MCP_SHARED_SECRET=<value> in .dev.vars (gitignored)
+# Set it whenever the upstream Honcho runs with AUTH_USE_AUTH=false, because
+# this Worker is then the only auth in front of it. Leave it unset to keep the
+# old pass-through behaviour where Honcho's own auth rejects bad tokens.
+
 name = "honcho-mcp"
 main = "src/index.ts"
 compatibility_date = "2024-12-09"
