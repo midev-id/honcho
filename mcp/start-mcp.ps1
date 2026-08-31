@@ -1,4 +1,4 @@
 $ErrorActionPreference = "Stop"
 Set-Location "C:\Users\MAHDI\Documents\Autopreneur\honcho-server\mcp"
-$env:PATH = "$env:USERPROFILE\.bun\bin;$env:PATH"
-& "$env:USERPROFILE\.bun\bin\bun.exe" run dev
+$env:PATH = "C:\Users\MAHDI\.bun\bin;$env:PATH"
+& "C:\Users\MAHDI\.bun\bin\bun.exe" run dev
